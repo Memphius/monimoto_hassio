@@ -1,0 +1,51 @@
+refresh:
+  name: Refresh
+  description: Forceer een directe update van Monimoto-data.
+
+start_tracking:
+  name: Start tracking
+  description: Zet live tracking aan.
+  fields:
+    blename:
+      name: BLE name
+      required: true
+      selector:
+        text:
+
+stop_tracking:
+  name: Stop tracking
+  description: Zet live tracking uit.
+  fields:
+    blename:
+      name: BLE name
+      required: true
+      selector:
+        text:
+
+snooze:
+  name: Snooze
+  description: Zet het device in snooze voor een aantal seconden.
+  fields:
+    blename:
+      name: BLE name
+      required: true
+      selector:
+        text:
+    duration_sec:
+      name: Duur in seconden
+      required: true
+      selector:
+        number:
+          min: 60
+          max: 86400
+          mode: box
+
+trigger_alarm:
+  name: Trigger alarm
+  description: Forceer een alarm call naar Monimoto.
+  fields:
+    blename:
+      name: BLE name
+      required: true
+      selector:
+        text:
