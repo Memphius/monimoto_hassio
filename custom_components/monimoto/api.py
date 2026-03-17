@@ -10,11 +10,14 @@ import aiohttp
 from .const import (
     BASIC_AUTH_PASS,
     BASIC_AUTH_USER,
+    ENDPOINT_ALARM_TMPL,
     ENDPOINT_AUTH_CONFIRM,
     ENDPOINT_AUTH_LOGIN,
     ENDPOINT_AUTH_TOKENS,
     ENDPOINT_DEVICES,
     ENDPOINT_REPORTS_TMPL,
+    ENDPOINT_SNOOZE_TMPL,
+    ENDPOINT_TRACK_TMPL,
 )
 from .models import MonimotoDevice, MonimotoReport
 
@@ -44,8 +47,6 @@ class TokenData:
 
     @classmethod
     def from_confirm_response(cls, data: dict[str, Any]) -> "TokenData":
-        # Access token in jouw test was ~8 uur geldig.
-        # Neem marge zodat refresh eerder gebeurt.
         expires_at = datetime.now(tz=UTC) + timedelta(hours=7, minutes=30)
         return cls(
             access_token=data["access_token"],
@@ -113,6 +114,7 @@ class MonimotoApiClient:
             "Authorization": f"Bearer {self._token.access_token}",
             "Accept-Language": "en",
             "Accept": "application/json",
+            "Content-Type": "application/json",
         }
 
     async def async_request_email_login(self) -> LoginChallenge:
@@ -123,15 +125,10 @@ class MonimotoApiClient:
             "language": "en",
             "phone": None,
         }
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
 
         async with self._session.post(
             url,
             json=payload,
-            headers=headers,
             auth=self._basic_auth(),
             ssl=self._verify_ssl,
         ) as resp:
@@ -161,15 +158,10 @@ class MonimotoApiClient:
             "sms_code": None,
             "uid": uid,
         }
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
 
         async with self._session.post(
             url,
             json=payload,
-            headers=headers,
             auth=self._basic_auth(),
             ssl=self._verify_ssl,
         ) as resp:
@@ -187,16 +179,10 @@ class MonimotoApiClient:
 
         url = f"{self._api_host}{ENDPOINT_AUTH_TOKENS}"
         payload = {"refresh_token": self._token.refresh_token}
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "Accept-Language": "en",
-        }
 
         async with self._session.post(
             url,
             json=payload,
-            headers=headers,
             auth=self._basic_auth(),
             ssl=self._verify_ssl,
         ) as resp:
@@ -214,46 +200,9 @@ class MonimotoApiClient:
         if self._token.expires_at <= datetime.now(tz=UTC):
             await self.async_refresh_token()
 
-    async def async_get_devices(self) -> list[MonimotoDevice]:
+    async def _get_json(self, path: str, *, params: dict[str, Any] | None = None) -> Any:
         await self._ensure_token()
-        url = f"{self._api_host}{ENDPOINT_DEVICES}"
-
-        async with self._session.get(
-            url,
-            headers=self._bearer_headers(),
-            ssl=self._verify_ssl,
-        ) as resp:
-            text = await resp.text()
-            if resp.status == 401:
-                await self.async_refresh_token()
-                async with self._session.get(
-                    url,
-                    headers=self._bearer_headers(),
-                    ssl=self._verify_ssl,
-                ) as retry_resp:
-                    retry_text = await retry_resp.text()
-                    if retry_resp.status >= 400:
-                        raise MonimotoAuthError(
-                            f"Unauthorized after refresh: {retry_resp.status} {retry_text}"
-                        )
-                    data = await retry_resp.json(content_type=None)
-                    return [MonimotoDevice.from_api(item) for item in data]
-
-            if resp.status >= 400:
-                raise MonimotoApiError(f"Device fetch failed: {resp.status} {text}")
-
-            data = await resp.json(content_type=None)
-            return [MonimotoDevice.from_api(item) for item in data]
-
-    async def async_get_reports(
-        self,
-        blename: str,
-        *,
-        from_unix: int,
-    ) -> list[MonimotoReport]:
-        await self._ensure_token()
-        url = f"{self._api_host}{ENDPOINT_REPORTS_TMPL.format(blename=blename)}"
-        params = {"from": from_unix}
+        url = f"{self._api_host}{path}"
 
         async with self._session.get(
             url,
@@ -273,13 +222,71 @@ class MonimotoApiClient:
                     retry_text = await retry_resp.text()
                     if retry_resp.status >= 400:
                         raise MonimotoAuthError(
-                            f"Reports unauthorized after refresh: {retry_resp.status} {retry_text}"
+                            f"Unauthorized after refresh: {retry_resp.status} {retry_text}"
                         )
-                    data = await retry_resp.json(content_type=None)
-                    return [MonimotoReport.from_api(item) for item in data]
+                    return await retry_resp.json(content_type=None)
 
             if resp.status >= 400:
-                raise MonimotoApiError(f"Report fetch failed: {resp.status} {text}")
+                raise MonimotoApiError(f"GET failed: {resp.status} {text}")
 
-            data = await resp.json(content_type=None)
-            return [MonimotoReport.from_api(item) for item in data]
+            return await resp.json(content_type=None)
+
+    async def _post_json(self, path: str, payload: dict[str, Any]) -> Any:
+        await self._ensure_token()
+        url = f"{self._api_host}{path}"
+
+        async with self._session.post(
+            url,
+            json=payload,
+            headers=self._bearer_headers(),
+            ssl=self._verify_ssl,
+        ) as resp:
+            text = await resp.text()
+            if resp.status == 401:
+                await self.async_refresh_token()
+                async with self._session.post(
+                    url,
+                    json=payload,
+                    headers=self._bearer_headers(),
+                    ssl=self._verify_ssl,
+                ) as retry_resp:
+                    retry_text = await retry_resp.text()
+                    if retry_resp.status >= 400:
+                        raise MonimotoAuthError(
+                            f"POST unauthorized after refresh: {retry_resp.status} {retry_text}"
+                        )
+                    return await retry_resp.json(content_type=None)
+
+            if resp.status >= 400:
+                raise MonimotoApiError(f"POST failed: {resp.status} {text}")
+
+            return await resp.json(content_type=None)
+
+    async def async_get_devices(self) -> list[MonimotoDevice]:
+        data = await self._get_json(ENDPOINT_DEVICES)
+        return [MonimotoDevice.from_api(item) for item in data]
+
+    async def async_get_reports(self, blename: str, *, from_unix: int) -> list[MonimotoReport]:
+        data = await self._get_json(
+            ENDPOINT_REPORTS_TMPL.format(blename=blename),
+            params={"from": from_unix},
+        )
+        return [MonimotoReport.from_api(item) for item in data]
+
+    async def async_set_tracking(self, blename: str, enabled: bool) -> dict[str, Any]:
+        return await self._post_json(
+            ENDPOINT_TRACK_TMPL.format(blename=blename),
+            {"tracking": 1 if enabled else 0},
+        )
+
+    async def async_set_snooze(self, blename: str, duration_sec: int) -> dict[str, Any]:
+        return await self._post_json(
+            ENDPOINT_SNOOZE_TMPL.format(blename=blename),
+            {"duration_sec": duration_sec},
+        )
+
+    async def async_trigger_alarm(self, blename: str, forced_alarm: bool = True) -> dict[str, Any]:
+        return await self._post_json(
+            ENDPOINT_ALARM_TMPL.format(blename=blename),
+            {"forced_alarm": forced_alarm},
+        )
