@@ -31,6 +31,11 @@ class MonimotoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._uid: str | None = None
         self._email_challenge: str | None = None
 
+    @staticmethod
+    def async_get_options_flow(config_entry):
+        from .options_flow import MonimotoOptionsFlow
+        return MonimotoOptionsFlow(config_entry)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -112,11 +117,7 @@ class MonimotoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data[TOKEN_STORAGE_KEY] = token.as_storage_dict()
                 return self.async_create_entry(title="Monimoto", data=data)
 
-        schema = vol.Schema(
-            {
-                vol.Required("email_code"): int,
-            }
-        )
+        schema = vol.Schema({vol.Required("email_code"): int})
 
         return self.async_show_form(
             step_id="authorize",
@@ -124,9 +125,3 @@ class MonimotoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=placeholders,
         )
-
-    @staticmethod
-    @config_entries.HANDLERS.register(DOMAIN)
-    def async_get_options_flow(config_entry):
-        from .options_flow import MonimotoOptionsFlow
-        return MonimotoOptionsFlow(config_entry)
