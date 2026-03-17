@@ -43,7 +43,7 @@ class MonimotoEntity(CoordinatorEntity):
 
     @property
     def extra_state_attributes(self) -> dict:
-        attrs = {
+        return {
             ATTR_DEVICE_ID: self._device_id,
             ATTR_RAW: self.device.raw,
             "blename": self.device.blename,
@@ -51,4 +51,3 @@ class MonimotoEntity(CoordinatorEntity):
             "imei": self.device.imei,
             "iccid": self.device.iccid,
         }
-        return attrs
