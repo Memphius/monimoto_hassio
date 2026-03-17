@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 DOMAIN = "monimoto"
-PLATFORMS = ["sensor", "binary_sensor", "device_tracker"]
+PLATFORMS = ["sensor", "binary_sensor", "device_tracker", "button", "number", "select"]
 
 CONF_EMAIL = "email"
 CONF_POLL_INTERVAL = "poll_interval"
