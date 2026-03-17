@@ -97,6 +97,20 @@ SENSORS: tuple[MonimotoSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda d: d.regular_ping_interval_min,
     ),
+    MonimotoSensorDescription(
+        key="imei",
+        name="IMEI",
+        icon="mdi:barcode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda d: d.imei,
+    ),
+    MonimotoSensorDescription(
+        key="iccid",
+        name="ICCID",
+        icon="mdi:sim",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda d: d.iccid,
+    ),
 )
 
 
