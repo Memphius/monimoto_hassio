@@ -23,5 +23,15 @@
       "cannot_connect": "Cannot connect",
       "authorize_failed": "Authorization failed"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Monimoto options",
+        "data": {
+          "poll_interval": "Poll interval (seconds)"
+        }
+      }
+    }
   }
 }
