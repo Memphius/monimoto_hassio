@@ -10,11 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    EntityCategory,
-    PERCENTAGE,
-    UnitOfTemperature,
-)
+from homeassistant.const import EntityCategory, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -110,6 +106,27 @@ SENSORS: tuple[MonimotoSensorDescription, ...] = (
         icon="mdi:sim",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda d: d.iccid,
+    ),
+    MonimotoSensorDescription(
+        key="gsm_level",
+        name="GSM level",
+        icon="mdi:signal",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda d: d.last_report.gsm_level if d.last_report else None,
+    ),
+    MonimotoSensorDescription(
+        key="last_latitude",
+        name="Last latitude",
+        icon="mdi:latitude",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda d: d.last_report.latitude if d.last_report else d.latitude,
+    ),
+    MonimotoSensorDescription(
+        key="last_longitude",
+        name="Last longitude",
+        icon="mdi:longitude",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda d: d.last_report.longitude if d.last_report else d.longitude,
     ),
 )
 
