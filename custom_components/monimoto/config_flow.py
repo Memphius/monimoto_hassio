@@ -124,3 +124,9 @@ class MonimotoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=placeholders,
         )
+
+    @staticmethod
+    @config_entries.HANDLERS.register(DOMAIN)
+    def async_get_options_flow(config_entry):
+        from .options_flow import MonimotoOptionsFlow
+        return MonimotoOptionsFlow(config_entry)
