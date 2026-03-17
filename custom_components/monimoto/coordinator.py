@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 import time
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,8 +9,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import MonimotoApiClient, MonimotoApiError, MonimotoAuthError
 from .const import CONF_POLL_INTERVAL, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class MonimotoCoordinator(DataUpdateCoordinator[dict[str, object]]):
@@ -23,7 +20,7 @@ class MonimotoCoordinator(DataUpdateCoordinator[dict[str, object]]):
     ) -> None:
         super().__init__(
             hass,
-            _LOGGER,
+            logger=None,
             name=DOMAIN,
             update_interval=timedelta(
                 seconds=entry.options.get(
@@ -39,7 +36,6 @@ class MonimotoCoordinator(DataUpdateCoordinator[dict[str, object]]):
         try:
             devices = await self.client.async_get_devices()
         except MonimotoAuthError as err:
-            self.entry.async_start_reauth(self.hass)
             raise UpdateFailed(f"Authentication failed: {err}") from err
         except MonimotoApiError as err:
             raise UpdateFailed(str(err)) from err
