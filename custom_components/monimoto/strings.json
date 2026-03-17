@@ -23,5 +23,15 @@
       "cannot_connect": "Kan geen verbinding maken",
       "authorize_failed": "Autorisatie mislukt"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Monimoto opties",
+        "data": {
+          "poll_interval": "Poll interval (seconden)"
+        }
+      }
+    }
   }
 }
