@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
@@ -22,6 +23,8 @@ from .const import (
     TOKEN_STORAGE_KEY,
 )
 from .coordinator import MonimotoCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -51,11 +54,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         verify_ssl=entry.data[CONF_VERIFY_SSL],
     )
 
-    if token_data := entry.data.get(TOKEN_STORAGE_KEY):
-        client.set_token(TokenData.from_storage_dict(token_data))
+    token_data = entry.data.get(TOKEN_STORAGE_KEY)
+    if token_data:
+        try:
+            client.set_token(TokenData.from_storage_dict(token_data))
+        except Exception as err:
+            _LOGGER.warning("Invalid stored token data, ignoring it: %s", err)
 
     coordinator = MonimotoCoordinator(hass, entry, client)
-    await coordinator.async_config_entry_first_refresh()
+
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception:
+        _LOGGER.exception("Monimoto first refresh failed")
+        raise
 
     entry.runtime_data = RuntimeData(client=client, coordinator=coordinator)
     await _async_save_token_if_changed(hass, entry)
