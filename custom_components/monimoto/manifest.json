@@ -9,5 +9,5 @@
   "issue_tracker": "https://github.com/Memphius/monimoto_hassio/issues",
   "loggers": ["custom_components.monimoto"],
   "requirements": [],
-  "version": "0.1.2"
+  "version": "0.1.3"
 }
