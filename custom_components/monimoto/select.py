@@ -25,7 +25,7 @@ class MonimotoTrackingSelect(MonimotoEntity, SelectEntity):
         return "on" if self.device.tracking else "off"
 
     async def async_select_option(self, option: str) -> None:
-        runtime = self.coordinator.config_entry.runtime_data
+        runtime = self.coordinator.entry.runtime_data
         await runtime.client.async_set_tracking(self.device.blename, option == "on")
         await runtime.coordinator.async_request_refresh()
 
@@ -36,8 +36,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data.coordinator
-    coordinator.config_entry = entry
-
     async_add_entities(
         [MonimotoTrackingSelect(coordinator, device_id) for device_id in coordinator.data]
     )
