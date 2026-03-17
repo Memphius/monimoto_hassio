@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-import logging
 from typing import Any
 
 import aiohttp
@@ -20,8 +19,6 @@ from .const import (
     ENDPOINT_TRACK_TMPL,
 )
 from .models import MonimotoDevice, MonimotoReport
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class MonimotoApiError(Exception):
@@ -290,3 +287,6 @@ class MonimotoApiClient:
             ENDPOINT_ALARM_TMPL.format(blename=blename),
             {"forced_alarm": forced_alarm},
         )
+
+    async def async_noop(self) -> None:
+        return None
