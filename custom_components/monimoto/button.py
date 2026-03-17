@@ -27,7 +27,7 @@ class MonimotoButton(MonimotoEntity, ButtonEntity):
         self._attr_suggested_object_id = f"{self.device_slug}_{description.key}"
 
     async def async_press(self) -> None:
-        runtime = self.coordinator.config_entry.runtime_data
+        runtime = self.coordinator.entry.runtime_data
         await self.entity_description.press_fn(runtime.client, self.device.blename)
         await runtime.coordinator.async_request_refresh()
 
@@ -67,7 +67,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data.coordinator
-    coordinator.config_entry = entry
 
     entities: list[ButtonEntity] = []
     for device_id in coordinator.data:
