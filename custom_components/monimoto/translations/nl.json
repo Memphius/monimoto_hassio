@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Monimoto",
+        "description": "Voer je Monimoto e-mailadres in. Daarna ontvang je een code per e-mail.",
+        "data": {
+          "email": "E-mailadres",
+          "api_host": "API host",
+          "poll_interval": "Poll-interval (seconden)",
+          "verify_ssl": "SSL verifiëren"
+        }
+      },
+      "authorize": {
+        "title": "E-mailcode bevestigen",
+        "description": "Voer de code in die naar {email} is gestuurd.",
+        "data": {
+          "email_code": "E-mailcode"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken",
+      "authorize_failed": "Autorisatie mislukt"
+    }
+  }
+}
