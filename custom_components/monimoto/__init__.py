@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
@@ -23,8 +22,6 @@ from .const import (
     TOKEN_STORAGE_KEY,
 )
 from .coordinator import MonimotoCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
